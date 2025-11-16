@@ -288,12 +288,24 @@ def main():
                         help="Max probe rate (queries per second)")
     parser.add_argument("--no-color", action="store_true", help="Disable color in output")
     parser.add_argument("--i-accept-the-risk", action="store_true", help="Accept high QPS risk")
-
+    # EXTRA CREDIT: --save-path flag
+    parser.add_argument("--save-path", action="store_true", 
+                        help="Save hop list to a timestamped file (trace_<dst>_<ts>.jsonl)")
     args = parser.parse_args()
     
     # Logic to handle conflicting DNS flags
     # prioritize -n.
     use_rdns = args.rdns and not args.n
+
+    # EXTRA CREDIT: Logic for --save-path ---
+    json_path = args.json  # Use the --json path by default
+    
+    if args.save_path:
+        ts = int(time.time())
+        # Clean the target name to be safe for a filename
+        safe_dst = args.target.replace('.', '_').replace('/', '_').replace(':', '_')
+        json_path = f"trace_{safe_dst}_{ts}.jsonl"
+        print(f"Saving hop list to: {json_path}")
 
     traceroute(target=args.target, 
                max_ttl=args.max_ttl, 
@@ -302,7 +314,7 @@ def main():
                resolve_hostnames=not args.n, 
                rdns=use_rdns, 
                flow_id=args.flow_id, 
-               json_output=args.json, 
+               json_output=json_path, 
                qps_limit=args.qps_limit, 
                no_color=args.no_color,
                i_accept_the_risk=args.i_accept_the_risk)
